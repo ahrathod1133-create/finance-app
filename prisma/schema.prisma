@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // FATHER, SON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  loansGiven Loan[]  @relation("UserLoans")
+  activityLogs ActivityLog[]
+}
+
+model Customer {
+  id              String   @id @default(cuid())
+  fullName        String
+  mobileNumber    String
+  alternateNumber String?
+  address         String?
+  city            String?
+  state           String?
+  notes           String?
+  govIdNumber     String?
+  profilePhoto    String?
+  status          String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  loans           Loan[]
+}
+
+model Loan {
+  id               String   @id @default(cuid())
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id])
+  userId           String?
+  user             User?    @relation("UserLoans", fields: [userId], references: [id])
+  
+  type             String   // GIVEN, TAKEN
+  principalAmount  Float
+  interestRate     Float
+  interestType     String   // SIMPLE, COMPOUND
+  interestFrequency String  // MONTHLY, YEARLY, CUSTOM
+  
+  startDate        DateTime
+  endDate          DateTime?
+  durationDays     Int?
+  durationMonths   Int?
+  durationYears    Int?
+  
+  purpose          String?
+  notes            String?
+  status           String   @default("ACTIVE") // ACTIVE, CLOSED, CANCELLED
+  
+  paymentMethod    String?  // CASH, UPI, BANK_TRANSFER, CHEQUE
+  referenceNumber  String?
+  
+  totalPayable     Float?
+  remainingAmount  Float
+  remainingInterest Float?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  payments         Payment[]
+  attachments      Attachment[]
+  loanNotes        Note[]
+  activityLogs     ActivityLog[]
+  fundings         LoanFunding[]
+}
+
+model Lender {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  mobile          String
+  address         String?
+  notes           String?
+  amountInvested  Float
+  interestRate    Float
+  dateJoined      DateTime @default(now())
+  status          String   @default("ACTIVE")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  fundings        LoanFunding[]
+  transactions    LenderTransaction[]
+}
+
+model LoanFunding {
+  id              String   @id @default(cuid())
+  loanId          String
+  loan            Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  
+  lenderId        String
+  lender          Lender   @relation(fields: [lenderId], references: [id])
+  
+  amount          Float
+  interestRate    Float
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model LenderTransaction {
+  id              String   @id @default(cuid())
+  lenderId        String
+  lender          Lender   @relation(fields: [lenderId], references: [id], onDelete: Cascade)
+  type            String   // DEPOSIT, WITHDRAWAL, INTEREST_PAYMENT
+  amount          Float
+  date            DateTime @default(now())
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  loanId            String
+  loan              Loan     @relation(fields: [loanId], references: [id])
+  paymentDate       DateTime @default(now())
+  amount            Float
+  interestPaid      Float
+  principalPaid     Float
+  remainingPrincipal Float
+  remainingInterest Float
+  paymentMode       String   // CASH, UPI, BANK_TRANSFER, CHEQUE
+  referenceNumber   String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  loanId     String
+  loan       Loan     @relation(fields: [loanId], references: [id])
+  fileName   String
+  fileUrl    String
+  fileType   String   // PHOTO, PDF, AGREEMENT, CHEQUE, ID_PROOF
+  createdAt  DateTime @default(now())
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  loanId     String
+  loan       Loan     @relation(fields: [loanId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  loanId     String?
+  loan       Loan?    @relation(fields: [loanId], references: [id])
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String   // LOAN_CREATED, PAYMENT_ADDED, NOTE_ADDED, LOAN_CLOSED, etc.
+  details    String?
+  createdAt  DateTime @default(now())
+}
+
+model Setting {
+  id                  String   @id @default(cuid())
+  companyName         String   @default("My Finance")
+  currency            String   @default("INR")
+  defaultInterestRate Float    @default(2.0)
+  defaultDurationType String   @default("MONTHS")
+  theme               String   @default("SYSTEM") // LIGHT, DARK, SYSTEM
+  updatedAt           DateTime @updatedAt
+}
