@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Personal finance and loan management app",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
