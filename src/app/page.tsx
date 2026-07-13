@@ -152,7 +152,7 @@ export default async function Home() {
                 <tr key={loan.id}>
                   <td>
                     <div style={{ fontWeight: 500 }}>{loan.customer.fullName}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{loan.customer.mobile}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{loan.customer.mobileNumber}</div>
                   </td>
                   <td>
                     <span className={loan.type === 'GIVEN' ? 'badge badge-active' : 'badge badge-danger'}>
